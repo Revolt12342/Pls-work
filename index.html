@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Pomodoro Clock</title>
+    <style>
+        :root {
+            --rose-gold: #e6c2a6;
+            --rose-shadow: #bfa088;
+            --dark-metal: #1a1a1a;
+            --bg-color: #111111;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--bg-color);
+            height: 100vh;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 20 / 7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #2a2a2a 0%, #000000 100%);
+            padding: 20px;
+            gap: 60px;
+        }
+
+        /* Watch Case */
+        .watch-case {
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e3e3e3 0%, #a8a8a8 50%, #f0f0f0 100%);
+            box-shadow: 
+                0 20px 50px rgba(0,0,0,0.8),
+                inset 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .bezel {
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #888, #fff, #888, #fff, #888);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .dial {
+            width: 330px;
+            height: 330px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--rose-gold) 60%, var(--rose-shadow) 100%);
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.4);
+        }
+
+        .dial::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50%;
+            background-image: repeating-radial-gradient(circle at center, transparent 0, transparent 2px, rgba(0,0,0,0.03) 3px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .brand {
+            position: absolute;
+            top: 22%;
+            width: 100%;
+            text-align: center;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            color: #1a1a1a;
+            z-index: 1;
+        }
+
+        .brand-sub {
+            display: block;
+            font-size: 9px;
+            font-weight: normal;
+            margin-top: 3px;
+        }
+
+        .marker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            transform: rotate(var(--rot));
+        }
+
+        .marker span {
+            display: block;
+            margin-top: 12px;
+            transform: rotate(calc(var(--rot) * -1));
+        }
+
+        /* Date Sub-dial */
+        .sub-dial {
+            position: absolute;
+            width: 85px;
+            height: 85px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(0,0,0,0.08));
+            box-shadow: inset 2px 2px 5px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 8;
+        }
+
+        .date-dial {
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .pomo-dial {
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .sub-label {
+            font-size: 7px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+
+        .date-display {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1a1a1a;
+            line-height: 1;
+        }
+
+        .date-divider {
+            width: 50px;
+            height: 0.5px;
+            background: #1a1a1a;
+            margin: 3px 0;
+            opacity: 0.5;
+        }
+
+        .month-display {
+            font-size: 8px;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .pomo-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a1a;
+            line-height: 1;
+        }
+
+        .pomo-hand {
+            position: absolute;
+            width: 2px;
+            height: 35px;
+            background: #c41e3a;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            margin-left: -1px;
+            z-index: 9;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: transform 0.5s ease-out;
+        }
+
+        .hands-container {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 2px;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .hour-hand {
+            width: 7px;
+            height: 85px;
+            background: linear-gradient(to top, #1a1a1a, #333);
+            margin-left: -3.5px;
+        }
+
+        .minute-hand {
+            width: 5px;
+            height: 120px;
+            background: linear-gradient(to top, #1a1a1a, #2a2a2a);
+            margin-left: -2.5px;
+        }
+
+        .second-hand {
+            width: 1.5px;
+            height: 130px;
+            background: #c41e3a;
+            margin-left: -0.75px;
+        }
+
+        .center-pin {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 11px; height: 11px;
+            background: radial-gradient(circle at 30% 30%, #fff, #888);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 15;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.3);
+        }
+
+        .controls-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .timer-info {
+            text-align: center;
+            color: #d4af37;
+        }
+
+        .timer-large {
+            font-size: 48px;
+            font-weight: 300;
+            font-family: 'Monaco', monospace;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .timer-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: linear-gradient(to bottom, #3a3a3a, #1a1a1a);
+            border: 1px solid #555;
+            color: #d4af37;
+            padding: 11px 24px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+            transition: all 0.25s ease;
+            font-weight: 500;
+            width: 140px;
+            text-align: center;
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(to bottom, #4a4a4a, #2a2a2a);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+
+        .session-status {
+            font-size: 12px;
+            color: #c41e3a;
+            margin-top: 12px;
+            letter-spacing: 0.5px;
+            min-height: 16px;
+        }
+
+        @media (max-aspect-ratio: 20/7) {
+            .dashboard-container {
+                flex-direction: column;
+                gap: 30px;
+            }
+
+            .watch-case {
+                width: 300px;
+                height: 300px;
+            }
+
+            .bezel {
+                width: 280px;
+                height: 280px;
+            }
+
+            .dial {
+                width: 260px;
+                height: 260px;
+            }
+
+            .timer-large {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        
+        <div class="watch-case">
+            <div class="bezel">
+                <div class="dial">
+                    
+                    <div class="brand">
+                        Patek Philippe
+                        <span class="brand-sub">Geneve</span>
+                    </div>
+
+                    <div class="marker" style="--rot: 0deg;"><span>12</span></div>
+                    <div class="marker" style="--rot: 30deg;"><span>1</span></div>
+                    <div class="marker" style="--rot: 60deg;"><span>2</span></div>
+                    <div class="marker" style="--rot: 90deg;"><span>3</span></div>
+                    <div class="marker" style="--rot: 120deg;"><span>4</span></div>
+                    <div class="marker" style="--rot: 150deg;"><span>5</span></div>
+                    <div class="marker" style="--rot: 180deg;"><span>6</span></div>
+                    <div class="marker" style="--rot: 210deg;"><span>7</span></div>
+                    <div class="marker" style="--rot: 240deg;"><span>8</span></div>
+                    <div class="marker" style="--rot: 270deg;"><span>9</span></div>
+                    <div class="marker" style="--rot: 300deg;"><span>10</span></div>
+                    <div class="marker" style="--rot: 330deg;"><span>11</span></div>
+
+                    <div class="sub-dial date-dial">
+                        <div class="sub-label">Date</div>
+                        <div class="date-display" id="day-number">29</div>
+                        <div class="date-divider"></div>
+                        <div class="month-display" id="month-name">NOV</div>
+                    </div>
+
+                    <div class="sub-dial pomo-dial">
+                        <div class="sub-label">Timer</div>
+                        <div class="pomo-text" id="pomo-text">25</div>
+                        <div class="pomo-hand" id="pomo-hand"></div>
+                    </div>
+
+                    <div class="hands-container">
+                        <div class="hand hour-hand" id="hour-hand"></div>
+                        <div class="hand minute-hand" id="minute-hand"></div>
+                        <div class="hand second-hand" id="second-hand"></div>
+                        <div class="center-pin"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-section">
+            <div class="timer-info">
+                <div class="timer-large" id="timerDisplay">25:00</div>
+                <div class="timer-label">Pomodoro Session</div>
+            </div>
+
+            <div>
+                <button class="control-btn" id="startBtn">Start Focus</button>
+                <button class="control-btn" id="pauseBtn">Pause</button>
+                <button class="control-btn" id="resetBtn">Reset</button>
+            </div>
+
+            <div class="session-status" id="sessionStatus"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Clock functionality
+        function updateClock() {
+            const now = new Date();
+            const seconds = now.getSeconds();
+            const minutes = now.getMinutes();
+            const hours = now.getHours() % 12;
+
+            const secDeg = (seconds / 60) * 360;
+            const minDeg = (minutes / 60) * 360 + (seconds / 60) * 6;
+            const hourDeg = (hours / 12) * 360 + (minutes / 60) * 30;
+
+            document.getElementById('second-hand').style.transform = `rotate(${secDeg}deg)`;
+            document.getElementById('minute-hand').style.transform = `rotate(${minDeg}deg)`;
+            document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+
+            // Update Date Complication
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            document.getElementById('day-number').textContent = now.getDate().toString().padStart(2, '0');
+            document.getElementById('month-name').textContent = months[now.getMonth()];
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Pomodoro Timer functionality
+        let timerInterval = null;
+        let timeRemaining = 25 * 60;
+        const totalTime = 25 * 60;
+        let isRunning = false;
+        let isWorkSession = true;
+
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const pomoText = document.getElementById('pomo-text');
+        const pomoHand = document.getElementById('pomo-hand');
+        const sessionStatus = document.getElementById('sessionStatus');
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            timerDisplay.textContent = formatTime(timeRemaining);
+            const minutes = Math.floor(timeRemaining / 60);
+            pomoText.textContent = minutes;
+
+            const currentTotal = isWorkSession ? totalTime : 5 * 60;
+            const elapsed = isWorkSession ? totalTime - timeRemaining : (5 * 60) - timeRemaining;
+            const percentage = (elapsed / currentTotal) * 360;
+            pomoHand.style.transform = `rotate(${percentage}deg)`;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            startBtn.textContent = 'Running...';
+            startBtn.disabled = true;
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+
+                if (timeRemaining === 0) {
+                    isWorkSession = !isWorkSession;
+                    timeRemaining = isWorkSession ? totalTime : 5 * 60;
+                    sessionStatus.textContent = isWorkSession ? '✓ Break complete! Time to work' : '✓ Session complete! Take a break';
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    startBtn.textContent = 'Start Focus';
+                    startBtn.disabled = false;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            if (!isRunning) return;
+            clearInterval(timerInterval);
+            isRunning = false;
+            startBtn.textContent = 'Start Focus';
+            startBtn.disabled = false;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            isWorkSession = true;
+            timeRemaining = totalTime;
+            sessionStatus.textContent = '';
+            startBtn.textContent = 'Start Focus';
+            startBtn.disabled = false;
+            updateTimerDisplay();
+        }
+
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Initialize
+        updateTimerDisplay();
+    </script>
+</body>
+</html>
